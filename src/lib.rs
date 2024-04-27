@@ -151,9 +151,11 @@ pub use linear_solver::sundials::SundialsLinearSolver;
 #[cfg(feature = "sundials")]
 pub use ode_solver::sundials::SundialsIda;
 
+pub use anyhow::Result;
 use matrix::{DenseMatrix, Matrix, MatrixCommon, MatrixView, MatrixViewMut};
 pub use nonlinear_solver::newton::NewtonNonlinearSolver;
 use nonlinear_solver::NonLinearSolver;
+pub use num_traits::Zero;
 pub use ode_solver::{
     bdf::Bdf, builder::OdeBuilder, equations::OdeEquations, method::OdeSolverMethod,
     method::OdeSolverState, problem::OdeSolverProblem, sdirk::Sdirk, tableau::Tableau,
@@ -217,7 +219,6 @@ mod tests {
     fn test_readme_faer() {
         type T = f64;
         type V = faer::Col<f64>;
-        type M = faer::Mat<f64>;
         let problem = OdeBuilder::new()
             .p([0.04, 1.0e4, 3.0e7])
             .rtol(1e-4)
@@ -240,7 +241,7 @@ mod tests {
             )
             .unwrap();
 
-        let mut solver = Bdf::<M, _>::default();
+        let mut solver = Bdf::default();
 
         let t = 0.4;
         let y = solver.solve(&problem, t).unwrap();
