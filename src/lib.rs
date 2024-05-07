@@ -70,6 +70,7 @@
 //!
 //! The provided linear solvers are:
 //! - [NalgebraLU]: a direct solver that uses the LU decomposition implemented in the [nalgebra](https://nalgebra.org) library.
+//! - [FaerLU]: a direct solver that uses the LU decomposition implemented in the [faer](https://github.com/sarah-ek/faer-rs) library.
 //! - [SundialsLinearSolver]: a linear solver that uses the [sundials](https://computation.llnl.gov/projects/sundials) library (requires the `sundials` feature).
 //!
 //! The provided nonlinear solvers are:
@@ -79,7 +80,7 @@
 //!
 //! Via [OdeEquations], the user provides the action of the jacobian on a vector `J(x) v`. By default DiffSol uses this to generate a jacobian matrix for the ODE solver.
 //! Generally this requires `n` evaluations of the jacobian action for a system of size `n`, so it is often more efficient if the user can provide the jacobian matrix directly
-//! by implementing the [OdeEquations::jacobian_matrix] and the [OdeEquations::mass_matrix] (is applicable) functions.
+//! by implementing the [NonLinearOp::jacobian_inplace] and the [LinearOp::matrix_inplace] (if applicable) functions.
 //!
 //! DiffSol also provides an experimental feature to calculate sparse jacobians more efficiently by automatically detecting the sparsity pattern of the jacobian and using
 //! colouring \[1\] to reduce the number of jacobian evaluations. You can enable this feature by enabling [OdeBuilder::use_coloring()] option when building the ODE problem.
@@ -90,6 +91,7 @@
 //!
 //! When solving ODEs, you will need to choose a matrix and vector type to use. DiffSol uses the following types:
 //! - [nalgebra::DMatrix] and [nalgebra::DVector] from the [nalgebra](https://nalgebra.org) library.
+//! - [faer::Mat] and [faer::Col] from the [faer](https://github.com/sarah-ek/faer-rs) library.
 //! - [SundialsMatrix] and [SundialsVector] from the [sundials](https://computation.llnl.gov/projects/sundials) library (requires the `sundials` feature).
 //!
 //! If you wish to use your own matrix and vector types, you will need to implement the following traits:
@@ -152,7 +154,8 @@ pub use linear_solver::sundials::SundialsLinearSolver;
 pub use ode_solver::sundials::SundialsIda;
 
 pub use anyhow::Result;
-use matrix::{DenseMatrix, Matrix, MatrixCommon, MatrixView, MatrixViewMut};
+use matrix::{DenseMatrix, Matrix, MatrixCommon, MatrixSparsity, MatrixView, MatrixViewMut};
+
 pub use nonlinear_solver::newton::NewtonNonlinearSolver;
 use nonlinear_solver::NonLinearSolver;
 pub use num_traits::Zero;
@@ -160,7 +163,7 @@ pub use ode_solver::{
     bdf::Bdf, builder::OdeBuilder, equations::OdeEquations, method::OdeSolverMethod,
     method::OdeSolverState, problem::OdeSolverProblem, sdirk::Sdirk, tableau::Tableau,
 };
-use op::NonLinearOp;
+use op::{closure::Closure, linear_closure::LinearClosure, LinearOp, NonLinearOp, Op};
 use scalar::{IndexType, Scalar, Scale};
 use solver::SolverProblem;
 use vector::{Vector, VectorCommon, VectorIndex, VectorRef, VectorView, VectorViewMut};
@@ -240,6 +243,7 @@ mod tests {
                 |_p: &V, _t: T| V::from_vec(vec![1.0, 0.0, 0.0]),
             )
             .unwrap();
+
 
         let mut solver = Bdf::default();
 
