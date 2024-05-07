@@ -5,13 +5,13 @@ use super::equations::{OdeSolverEquations, OdeSolverEquationsMassI};
 
 /// Builder for ODE problems. Use methods to set parameters and then call one of the build methods when done.
 pub struct OdeBuilder {
-    t0: f64,
-    h0: f64,
-    rtol: f64,
-    atol: Vec<f64>,
-    p: Vec<f64>,
-    use_coloring: bool,
-    constant_mass: bool,
+    pub t0: f64,
+    pub h0: f64,
+    pub rtol: f64,
+    pub atol: Vec<f64>,
+    pub p: Vec<f64>,
+    pub use_coloring: bool,
+    pub constant_mass: bool,
 }
 
 impl Default for OdeBuilder {
@@ -94,7 +94,7 @@ impl OdeBuilder {
         self
     }
 
-    fn build_atol<V: Vector>(atol: Vec<f64>, nstates: usize) -> Result<V> {
+    pub fn build_atol<V: Vector>(atol: Vec<f64>, nstates: usize) -> Result<V> {
         if atol.len() == 1 {
             Ok(V::from_element(nstates, V::T::from(atol[0])))
         } else if atol.len() != nstates {
@@ -110,7 +110,7 @@ impl OdeBuilder {
         }
     }
 
-    fn build_p<V: Vector>(p: Vec<f64>) -> V {
+    pub fn build_p<V: Vector>(p: Vec<f64>) -> V {
         let mut v = V::zeros(p.len());
         for (i, &p) in p.iter().enumerate() {
             v[i] = V::T::from(p);
